@@ -1,0 +1,98 @@
+#!/bin/bash
+set -e
+# PAID = PulseAudio ID
+# ID = PID / process ID
+
+function main () {
+    if [ ! -e ~/.mic_over_Mumble ]; then
+        mkdir ~/.mic_over_Mumble
+    fi
+    cd ~/.mic_over_Mumble
+
+    if [ ! -e ~/.mic_over_Mumble/initdone ]; then
+        echo "You will need to configure Mumble client to use the lowest possible latency."
+        echo "We will start Mumble now. Please complete setup wizard and go to settings to increase quality and decrease latency."
+        echo "Also, mute your microphone (if you have one) in Mumble."
+        echo "Then close Mumble."
+        run_mumble_client_wizard
+        touch ~/.mic_over_Mumble/initdone
+    fi
+
+    echo "Starting Mumble server (murmurd)..."
+    MUMBLE_SERVER_ID=`run_mumble_server_bg`
+    sleep 5
+    echo "Starting Mumble client..."
+    MUMBLE_CLIENT_ID=`run_mumble_client_bg`
+    sleep 5
+    echo "Fetching PulseAudio configuration..."
+    MUMBLE_CLIENT_PAID=`get_mumble_client_paid`
+
+    echo "Changing PulseAudio configuration..."
+    SINK_MODULE_PAID=`add_sink`
+    sleep 3
+    SINK_PAID=`get_sink_paid`
+
+    pacmd move-sink-input $MUMBLE_CLIENT_PAID $SINK_PAID
+
+    echo "Done. Please use pavucontrol to ensure everything works."
+    echo "Press Return to shut down..."
+    read -n1 -s
+    echo "Shutting down..."
+
+    echo "Stopping Mumble client..."
+    kill -KILL $MUMBLE_CLIENT_ID
+    sleep 2
+    echo "Stopping Mumble server..."
+    kill -INT $MUMBLE_SERVER_ID
+    echo "Restoring PulseAudio configuration..."
+    pactl unload-module $SINK_MODULE_PAID
+}
+
+function run_mumble_client_wizard () {
+    mumble >/dev/null 2&>1
+}
+
+function run_mumble_client_bg () {
+    MUMBLE_URL="mumble://localhost"
+    mumble $MUMBLE_URL >/dev/null 2&>1 &
+    echo $!
+}
+
+function run_mumble_server_bg () {
+    murmur -fg >/dev/null 2&>1 &
+    echo $!
+}
+
+function get_mumble_client_paid () {
+    pacmd list-sink-inputs |
+        egrep "index: |application.name = " |
+        cut_every_second_newline |
+        egrep Mumble |
+        print_second_column
+}
+
+function add_sink () {
+    pactl load-module \
+        module-null-sink \
+        sink_name="Loopback_of_Mumble" \
+        sink_properties=device.description="Loopback_of_Mumble"
+}
+
+function get_sink_paid () {
+    pacmd list-sinks |
+        egrep "index: |name: " |
+        cut_every_second_newline |
+        egrep Loopback |
+        print_second_column
+}
+
+# https://serverfault.com/a/375098/449626
+function cut_every_second_newline () {
+    awk 'ORS=NR%2?" ":"\n"'
+}
+
+function print_second_column () {
+    awk '{print $2}'
+}
+
+main
