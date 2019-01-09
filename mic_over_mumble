@@ -9,13 +9,17 @@ function main () {
     fi
     cd ~/.mic_over_Mumble
 
-    if [ ! -e ~/.mic_over_Mumble/initdone ]; then
+    rm murmur.ini | true
+    echo "bonjour=true" >> murmur.ini
+    echo "bandwidth=130000" >> murmur.ini
+
+    if [ ! -e ./initdone ]; then
         echo "You will need to configure Mumble client to use the lowest possible latency."
         echo "We will start Mumble now. Please complete setup wizard and go to settings to increase quality and decrease latency."
         echo "Also, mute your microphone (if you have one) in Mumble."
         echo "Then close Mumble."
         run_mumble_client_wizard
-        touch ~/.mic_over_Mumble/initdone
+        touch ./initdone
     fi
 
     echo "Starting Mumble server (murmurd)..."
@@ -40,10 +44,10 @@ function main () {
     echo "Shutting down..."
 
     echo "Stopping Mumble client..."
-    kill -KILL $MUMBLE_CLIENT_ID
+    kill -KILL $MUMBLE_CLIENT_ID | true
     sleep 2
     echo "Stopping Mumble server..."
-    kill -INT $MUMBLE_SERVER_ID
+    kill -INT $MUMBLE_SERVER_ID | true
     echo "Restoring PulseAudio configuration..."
     pactl unload-module $SINK_MODULE_PAID
 }
@@ -59,7 +63,7 @@ function run_mumble_client_bg () {
 }
 
 function run_mumble_server_bg () {
-    murmur -fg >/dev/null 2&>1 &
+    murmurd -fg -ini ./murmur.ini >/dev/null 2&>1 &
     echo $!
 }
 
