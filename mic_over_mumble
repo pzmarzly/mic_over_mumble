@@ -9,7 +9,7 @@ function main () {
     fi
     cd ~/.mic_over_Mumble
 
-    rm murmur.ini | true
+    rm murmur.ini || true
     echo "bonjour=true" >> murmur.ini
     echo "bandwidth=130000" >> murmur.ini
 
@@ -23,44 +23,44 @@ function main () {
     fi
 
     echo "Starting Mumble server (murmurd)..."
-    MUMBLE_SERVER_ID=`run_mumble_server_bg`
+    run_mumble_server_bg # MUMBLE_SERVER_ID=...
     sleep 5
     echo "Starting Mumble client..."
-    MUMBLE_CLIENT_ID=`run_mumble_client_bg`
+    MUMBLE_CLIENT_ID=$(run_mumble_client_bg)
     sleep 5
     echo "Fetching PulseAudio configuration..."
-    MUMBLE_CLIENT_PAID=`get_mumble_client_paid`
+    MUMBLE_CLIENT_PAID=$(get_mumble_client_paid)
 
     echo "Changing PulseAudio configuration..."
-    SINK_MODULE_PAID=`add_sink`
+    SINK_MODULE_PAID=$(add_sink)
     sleep 3
-    SINK_PAID=`get_sink_paid`
+    SINK_PAID=$(get_sink_paid)
 
-    pacmd move-sink-input $MUMBLE_CLIENT_PAID $SINK_PAID
+    pacmd move-sink-input "$MUMBLE_CLIENT_PAID" "$SINK_PAID"
 
     echo "Done. Please use pavucontrol to ensure everything works."
     echo "Press Return to shut down..."
-    read -n1 -s
+    read -n1 -s -r
     echo "Shutting down..."
 
     echo "Stopping Mumble client..."
-    kill -KILL $MUMBLE_CLIENT_ID | true
+    kill -KILL "$MUMBLE_CLIENT_ID" || true
     sleep 2
     echo "Stopping Mumble server..."
     # TODO: find a better way to kill murmurd
     # (it forks, so we cannot use its PID)
-    pkill murmurd | true
+    pkill murmurd || true
     echo "Restoring PulseAudio configuration..."
-    pactl unload-module $SINK_MODULE_PAID
+    pactl unload-module "$SINK_MODULE_PAID"
 }
 
 function run_mumble_client_wizard () {
-    mumble >/dev/null 2&>1
+    mumble >/dev/null 2>&1
 }
 
 function run_mumble_client_bg () {
     MUMBLE_URL="mumble://localhost"
-    mumble $MUMBLE_URL >/dev/null 2&>1 &
+    mumble $MUMBLE_URL >/dev/null 2>&1 &
     echo $!
 }
 
@@ -71,9 +71,9 @@ function run_mumble_server_bg () {
 
 function get_mumble_client_paid () {
     pacmd list-sink-inputs |
-        egrep "index: |application.name = " |
+        grep -E "index: |application.name = " |
         cut_every_second_newline |
-        egrep Mumble |
+        grep -E Mumble |
         print_second_column
 }
 
@@ -86,9 +86,9 @@ function add_sink () {
 
 function get_sink_paid () {
     pacmd list-sinks |
-        egrep "index: |name: " |
+        grep -E "index: |name: " |
         cut_every_second_newline |
-        egrep Loopback |
+        grep -E Loopback |
         print_second_column
 }
 
