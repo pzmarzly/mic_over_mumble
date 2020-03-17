@@ -10,6 +10,14 @@ This is the lowest latency I've ever achieved (sounds almost like local loopback
 
 Install Mumble (desktop client) + Murmur (server) + Plumble (Android/iOS client). Set all 3 programs to use best quality and minimal latency. Set mobile client to always streaming.
 
+To install Mumble + Murmur on Ubuntu, you can use:
+
+```bash
+sudo apt install mumble mumble-server
+sudo systemctl stop mumble-server.service
+sudo systemctl disable mumble-server.service
+```
+
 Copy `mic_over_mumble` anywhere - it will use `~/.mic_over_Mumble` as configuration directory.
 
 Run `mic_over_mumble`, then connect your mobile device to LAN server.

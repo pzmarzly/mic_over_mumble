@@ -1,5 +1,5 @@
 #!/bin/bash
-set -e
+set -euo pipefail
 # PAID = PulseAudio ID
 # ID = PID / process ID
 
@@ -27,13 +27,15 @@ function main () {
     sleep 5
     echo "Starting Mumble client..."
     MUMBLE_CLIENT_ID=$(run_mumble_client_bg)
-    sleep 5
+    sleep 15
     echo "Fetching PulseAudio configuration..."
     MUMBLE_CLIENT_PAID=$(get_mumble_client_paid)
 
     echo "Changing PulseAudio configuration..."
+    echo "Adding sink..."
     SINK_MODULE_PAID=$(add_sink)
     sleep 3
+    echo "Fetching current configuration..."
     SINK_PAID=$(get_sink_paid)
 
     pacmd move-sink-input "$MUMBLE_CLIENT_PAID" "$SINK_PAID"
