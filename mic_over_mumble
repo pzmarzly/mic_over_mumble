@@ -39,6 +39,8 @@ function main () {
     SINK_PAID=$(get_sink_paid)
 
     pacmd move-sink-input "$MUMBLE_CLIENT_PAID" "$SINK_PAID"
+    
+    pacmd load-module module-virtual-source source_name=VirtualMic master=Loopback_of_Mumble.monitor
 
     echo "Done. Please use pavucontrol to ensure everything works."
     echo "Press Return to shut down..."
@@ -54,6 +56,7 @@ function main () {
     pkill murmurd || true
     echo "Restoring PulseAudio configuration..."
     pactl unload-module "$SINK_MODULE_PAID"
+    pactl unload-module module-virtual-source
 }
 
 function run_mumble_client_wizard () {
