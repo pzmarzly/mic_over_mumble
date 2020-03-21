@@ -35,12 +35,14 @@ function main () {
     echo "Adding sink..."
     SINK_MODULE_PAID=$(add_sink)
     sleep 3
-    echo "Fetching current configuration..."
-    SINK_PAID=$(get_sink_paid)
 
+    echo "Fetching current configuration to redirect Mumble..."
+    SINK_PAID=$(get_sink_paid)
     pacmd move-sink-input "$MUMBLE_CLIENT_PAID" "$SINK_PAID"
-    
-    pacmd load-module module-virtual-source source_name=VirtualMic master=Loopback_of_Mumble.monitor
+
+    echo "Adding a virtual microphone..."
+    SOURCE_MODULE_PAID=$(add_source)
+    echo "$SOURCE_MODULE_PAID $SINK_MODULE_PAID"
 
     echo "Done. Please use pavucontrol to ensure everything works."
     echo "Press Return to shut down..."
@@ -55,8 +57,8 @@ function main () {
     # (it forks, so we cannot use its PID)
     pkill murmurd || true
     echo "Restoring PulseAudio configuration..."
+    pactl unload-module "$SOURCE_MODULE_PAID"
     pactl unload-module "$SINK_MODULE_PAID"
-    pactl unload-module module-virtual-source
 }
 
 function run_mumble_client_wizard () {
@@ -85,8 +87,16 @@ function get_mumble_client_paid () {
 function add_sink () {
     pactl load-module \
         module-null-sink \
-        sink_name="Loopback_of_Mumble" \
-        sink_properties=device.description="Loopback_of_Mumble"
+        sink_name=Loopback_of_Mumble \
+        sink_properties=device.description=Loopback_of_Mumble
+}
+
+function add_source () {
+    pactl load-module \
+        module-virtual-source \
+        source_name=VirtualMic \
+        master=Loopback_of_Mumble.monitor \
+        source_properties=device.description=Loopback_of_Mumble
 }
 
 function get_sink_paid () {
