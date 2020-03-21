@@ -25,3 +25,5 @@ Run `mic_over_mumble`, then connect your mobile device to LAN server.
 Then, set up your programs to use monitor of Mumble as input device. E.g. in OBS:
 
 ![Screenshot of OBS configuration](obs_screenshot.png)
+
+If for some reason the script messes up your audio config, you can use `pulseaudio -k` to reload PA.
