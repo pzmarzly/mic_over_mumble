@@ -96,7 +96,7 @@ function add_source () {
         module-virtual-source \
         source_name=VirtualMic \
         master=Loopback_of_Mumble.monitor \
-        source_properties=device.description=Loopback_of_Mumble
+        source_properties=device.description=VirtualMic
 }
 
 function get_sink_paid () {
