@@ -78,9 +78,9 @@ function run_mumble_server_bg () {
 
 function get_mumble_client_paid () {
     pacmd list-sink-inputs |
-        grep -E "index: |media.name = " |
+        grep -F -e "index: " -e "media.name = " |
         cut_every_second_newline |
-        grep -E Mumble |
+        grep -F -e "Mumble" |
         print_second_column
 }
 
@@ -101,9 +101,9 @@ function add_source () {
 
 function get_sink_paid () {
     pacmd list-sinks |
-        grep -E "index: |name: " |
+        grep -F -e "index: " -e "name: " |
         cut_every_second_newline |
-        grep -E Loopback |
+        grep -F -e "Loopback" |
         print_second_column
 }
 
