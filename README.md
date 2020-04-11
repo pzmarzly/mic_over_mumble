@@ -20,9 +20,9 @@ sudo systemctl disable mumble-server.service
 
 Copy `mic_over_mumble` anywhere - it will use `~/.mic_over_Mumble` as configuration directory.
 
-Run `mic_over_mumble`, then connect your mobile device to LAN server.
+Run `mic_over_mumble`. It will start the server on LAN, then start Mumble (if asked for nickname, enter anything other than SuperUser). Then connect your mobile device to the LAN server manually. Please note that Mumble mobile app [has some issues](https://github.com/pzmarzly/mic_over_mumble/issues/4#issuecomment-602817058).
 
-Then, set up your programs to use monitor of Mumble as input device. E.g. in OBS:
+Then, set up your programs to use either "Monitor_of_Mumble" or "VirtualMic" as input device (they are linked). E.g. in OBS:
 
 ![Screenshot of OBS configuration](obs_screenshot.png)
 
