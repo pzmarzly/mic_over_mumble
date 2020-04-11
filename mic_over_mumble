@@ -23,7 +23,7 @@ function main () {
     fi
 
     echo "Starting Mumble server (murmurd)..."
-    run_mumble_server_bg # MUMBLE_SERVER_ID=...
+    run_mumble_server_bg
     sleep 5
     echo "Starting Mumble client..."
     MUMBLE_CLIENT_ID=$(run_mumble_client_bg)
@@ -42,7 +42,6 @@ function main () {
 
     echo "Adding a virtual microphone..."
     SOURCE_MODULE_PAID=$(add_source)
-    echo "$SOURCE_MODULE_PAID $SINK_MODULE_PAID"
 
     echo "Done. Please use pavucontrol to ensure everything works."
     echo "Press Return to shut down..."
@@ -73,7 +72,9 @@ function run_mumble_client_bg () {
 
 function run_mumble_server_bg () {
     murmurd -ini ./murmur.ini &
-    echo $!
+    # echo $!
+    # TODO: here we can get murmur's PID
+    # (uncomment the line above)
 }
 
 function get_mumble_client_paid () {
