@@ -78,7 +78,7 @@ function run_mumble_server_bg () {
 
 function get_mumble_client_paid () {
     pacmd list-sink-inputs |
-        grep -E "index: |application.name = " |
+        grep -E "index: |media.name = " |
         cut_every_second_newline |
         grep -E Mumble |
         print_second_column
