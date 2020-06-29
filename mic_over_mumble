@@ -86,6 +86,7 @@ change_pa_config () {
     add_sink
     move_mumble_to_sink
     add_source
+    set_default_source
 }
 
 restore_pa_config () {
@@ -126,6 +127,10 @@ remove_source () {
 move_mumble_to_sink () {
     MUMBLE_CLIENT_PAID=$(get_mumble_client_paid)
     pacmd move-sink-input "$MUMBLE_CLIENT_PAID" "$SINK_PAID"
+}
+
+set_default_source () {
+    pactl set-default-source VirtualMic
 }
 
 # Data fetching & parsing.
