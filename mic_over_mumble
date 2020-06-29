@@ -90,8 +90,8 @@ change_pa_config () {
 
 restore_pa_config () {
     echo "Restoring PulseAudio configuration..."
-    pactl unload-module "$SOURCE_MODULE_PAID"
-    pactl unload-module "$SINK_MODULE_PAID"
+    remove_source
+    remove_sink
 }
 
 # PA utilities.
@@ -106,6 +106,10 @@ add_sink () {
     SINK_PAID=$(get_sink_paid)
 }
 
+remove_sink () {
+    pactl unload-module "$SINK_MODULE_PAID"
+}
+
 add_source () {
     echo "Adding a virtual microphone..."
     SOURCE_MODULE_PAID=$(pactl load-module \
@@ -113,6 +117,10 @@ add_source () {
         source_name=VirtualMic \
         master=Loopback_of_Mumble.monitor \
         source_properties=device.description=VirtualMic)
+}
+
+remove_source () {
+    pactl unload-module "$SOURCE_MODULE_PAID"
 }
 
 move_mumble_to_sink () {
