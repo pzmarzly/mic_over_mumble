@@ -105,6 +105,7 @@ function get_sink_paid () {
         grep -F -e "index: " -e "name: " |
         cut_every_second_newline |
         grep -F -e "Loopback" |
+        cut_active_device_indicator |
         print_second_column
 }
 
@@ -115,6 +116,13 @@ function cut_every_second_newline () {
 
 function print_second_column () {
     awk '{print $2}'
+}
+
+# See https://github.com/pzmarzly/mic_over_mumble/issues/5 .
+# The initial whitespace may contain an asterisk if the current
+# device is the default one.
+function cut_active_device_indicator () {
+    cut -c 5-
 }
 
 main
