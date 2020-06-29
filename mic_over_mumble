@@ -52,8 +52,7 @@ function main () {
     kill -KILL "$MUMBLE_CLIENT_ID" || true
     sleep 2
     echo "Stopping Mumble server..."
-    # TODO: find a better way to kill murmurd
-    # (it forks, so we cannot use its PID)
+    # FIXME: find a better way to kill Murmur.
     pkill murmurd || true
     echo "Restoring PulseAudio configuration..."
     pactl unload-module "$SOURCE_MODULE_PAID"
@@ -72,9 +71,8 @@ function run_mumble_client_bg () {
 
 function run_mumble_server_bg () {
     murmurd -ini ./murmur.ini &
-    # echo $!
-    # TODO: here we can get murmur's PID
-    # (uncomment the line above)
+    # Murmur forks, so the PID acquired by `echo $!`
+    # won't help us much.
 }
 
 function get_mumble_client_paid () {
