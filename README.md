@@ -6,6 +6,8 @@ Linux-only script, but steps can be replicated on other systems (e.g. using Voic
 
 This is the lowest latency I've ever achieved (sounds almost like local loopback, theoretically 7ms WiFi delay + 2x 10ms codec delay = 27 ms).
 
+Alternatives: [WO Mic](https://wolicheng.com/womic/wo_mic_linux.html) [pulseaudio-virtualmic](https://github.com/MatthiasCoppens/pulseaudio-virtualmic).
+
 ## Installation
 
 Install Mumble (desktop client) + Murmur (server) + Plumble (Android/iOS client). Set all 3 programs to use best quality and minimal latency. Set mobile client to always streaming.
