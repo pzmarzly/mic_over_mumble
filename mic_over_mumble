@@ -1,4 +1,5 @@
 #!/bin/bash
+# https://github.com/pzmarzly/mic_over_mumble
 set -euo pipefail
 # To debug, uncomment the following line:
 # set -x
@@ -52,12 +53,16 @@ shut_down () {
 }
 
 start_mumble_client () {
-    echo "Starting Mumble client..."
+    echo "Starting Mumble client (a window should appear in a moment)..."
     mumble "mumble://localhost" >/dev/null 2>&1 &
     MUMBLE_CLIENT_ID=$!
+    # FIXME: I don't remember why I thought this
+    # was necessary.
     disown
     # Mumble is slow to launch, and the
     # user may need to click on OK button.
+    # FIXME: probe PulseAudio server to see if
+    # Mumble has connected.
     sleep 15
 }
 
