@@ -24,7 +24,7 @@ For autodiscovery, make sure Avahi is running (it should be on Debian-based syst
 
 ```bash
 sudo apt install avahi-daemon
-sudo systemctl stop avahi-daemon.service
+sudo systemctl start avahi-daemon.service
 ```
 
 Copy `mic_over_mumble` anywhere - it will use `~/.mic_over_Mumble` as configuration directory. Don't forget to make it executable (`chmod +x mic_over_mumble`).
