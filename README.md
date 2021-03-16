@@ -27,6 +27,12 @@ sudo apt install avahi-daemon
 sudo systemctl start avahi-daemon.service
 ```
 
+If you want to have your IP address printed on startup, install `jq` and `ip`.
+
+```bash
+sudo apt install iproute2 jq
+```
+
 Copy `mic_over_mumble` anywhere - it will use `~/.mic_over_Mumble` as configuration directory. Don't forget to make it executable (`chmod +x mic_over_mumble`).
 
 Run `mic_over_mumble`. It will start the server on LAN, then start Mumble (if asked for nickname, enter anything other than SuperUser). Then connect your mobile device to the LAN server manually. Please note that Mumble mobile app [has some issues](https://github.com/pzmarzly/mic_over_mumble/issues/4#issuecomment-602817058).

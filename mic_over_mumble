@@ -43,6 +43,7 @@ set_up () {
     start_mumble_client
     change_pa_config
     echo "Done. Please use pavucontrol to ensure everything works."
+    print_ip
 }
 
 shut_down () {
@@ -199,6 +200,21 @@ take_second_column () {
 # device is the default one.
 cut_active_device_indicator () {
     cut -c 5-
+}
+
+print_ip () {
+    if ! [ -x "$(command -v ip)" ]; then
+        echo "Skipping IP printing: ip command not found..."
+        return
+    fi
+    if ! [ -x "$(command -v jq)" ]; then
+        echo "Skipping IP printing: jq command not found..."
+        return
+    fi
+    echo "Your IP addresses:"
+    set +e
+    ip -j addr | jq -r ".[] | .addr_info | .[] | select(.family==\"inet\") | select(.local != \"127.0.0.1\") | .local"
+    set -e
 }
 
 # Errors
