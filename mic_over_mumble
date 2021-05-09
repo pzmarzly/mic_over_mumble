@@ -129,7 +129,8 @@ add_source () {
         awk 'ORS=NR%2?" ":"\n"' |
         grep -F -e "VirtualMic" |
         cut -c 9- |
-        awk '{print $1}')
+        awk '{print $1}' |
+        head -n 1)
 }
 
 remove_source () {
