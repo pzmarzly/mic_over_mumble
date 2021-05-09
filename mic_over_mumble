@@ -2,7 +2,7 @@
 # https://github.com/pzmarzly/mic_over_mumble
 set -euo pipefail
 # To debug, uncomment the following line:
-# set -x
+set -x
 
 # PAID = PulseAudio ID
 # ID = PID / process ID
@@ -120,10 +120,16 @@ remove_sink () {
 add_source () {
     echo "Adding a virtual microphone..."
     SOURCE_MODULE_PAID=$(pactl load-module \
-        module-virtual-source \
+        module-remap-source \
         source_name=VirtualMic \
-        master=Loopback_of_Mumble.monitor \
+        master=${SINK_PAID} \
         source_properties=device.description=VirtualMic)
+    SOURCE_PAID=$(pactl list sources |
+        grep -F -e "Source #" -e "Name: " |
+        awk 'ORS=NR%2?" ":"\n"' |
+        grep -F -e "VirtualMic" |
+        cut -c 9- |
+        awk '{print $1}')
 }
 
 remove_source () {
@@ -132,21 +138,22 @@ remove_source () {
 
 move_mumble_to_sink () {
     MUMBLE_CLIENT_PAID=$(get_mumble_client_paid)
-    pacmd move-sink-input "$MUMBLE_CLIENT_PAID" "$SINK_PAID"
+    pactl move-sink-input "$MUMBLE_CLIENT_PAID" "$SINK_PAID"
 }
 
 set_default_source () {
-    pactl set-default-source VirtualMic
+    pactl set-default-source $SOURCE_PAID
 }
 
 # Data fetching & parsing.
 
 get_mumble_client_paid () {
-    result=$(pacmd list-sink-inputs |
-        grep -F -e "index: " -e "media.name = " |
+    result=$(pactl list sink-inputs |
+        grep -F -e "Sink Input #" -e "media.name = " |
         cut_every_second_newline |
         grep -F -e "Mumble" |
-        take_second_column)
+        cut -c 13- |
+        awk '{print $1}')
 
     if [ -z "$result" ]; then
         echo "Error: Mumble client did not connect to PulseAudio (yet?)." 2>&1
@@ -164,12 +171,10 @@ get_mumble_client_paid () {
 }
 
 get_sink_paid () {
-    result=$(pacmd list-sinks |
-        grep -F -e "index: " -e "name: " |
-        cut_every_second_newline |
+    result=$(pactl list short sinks |
         grep -F -e "Loopback" |
-        cut_active_device_indicator |
-        take_second_column)
+        head -n 1 |
+        awk '{print $1}')
 
      if [ -z "$result" ]; then
         echo "Error: Failed to find the device the script should have added." 2>&1
@@ -221,7 +226,7 @@ print_ip () {
 
 print_how_to_restart () {
     echo "Please find the reason why this happened, try fixing it"
-    echo "(\`pacmd list-sink-inputs\` and \`pacmd list-sinks\` may be"
+    echo "(\`pactl list sink-inputs\` and \`pactl list sinks\` may be"
     echo "useful), then kill mumble and murmurd, restart PulseAudio via"
     echo "\`pulseaudio -k\`, and finally, restart the script."
 }
