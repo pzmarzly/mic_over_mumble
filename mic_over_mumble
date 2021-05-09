@@ -2,7 +2,7 @@
 # https://github.com/pzmarzly/mic_over_mumble
 set -euo pipefail
 # To debug, uncomment the following line:
-set -x
+# set -x
 
 # PAID = PulseAudio ID
 # ID = PID / process ID
