@@ -124,6 +124,7 @@ add_source () {
         source_name=VirtualMic \
         master=${SINK_PAID} \
         source_properties=device.description=VirtualMic)
+    sleep 1
     SOURCE_PAID=$(pactl list sources |
         grep -F -e "Source #" -e "Name: " |
         awk 'ORS=NR%2?" ":"\n"' |
