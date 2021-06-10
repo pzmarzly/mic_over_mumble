@@ -33,7 +33,7 @@ If you want to have your IP address printed on startup, install `jq` and `ip`.
 sudo apt install iproute2 jq
 ```
 
-Copy `mic_over_mumble` anywhere - it will use `~/.mic_over_Mumble` as configuration directory. Don't forget to make it executable (`chmod +x mic_over_mumble`).
+Copy `mic_over_mumble` anywhere - it will use `~/.mic_over_Mumble` as configuration directory. Don't forget to make it executable (`chmod +x mic_over_mumble`). You may want to copy the executable to `/usr/local/bin/` for directly executing it without going into any specific directory.
 
 Run `mic_over_mumble`. It will start the server on LAN, then start Mumble (if asked for nickname, enter anything other than SuperUser). Then connect your mobile device to the LAN server manually. Please note that Mumble mobile app [has some issues](https://github.com/pzmarzly/mic_over_mumble/issues/4#issuecomment-602817058).
 
@@ -42,3 +42,6 @@ Then, set up your programs to use either "Monitor_of_Mumble" or "VirtualMic" as 
 ![Screenshot of OBS configuration](obs_screenshot.png)
 
 If for some reason the script messes up your audio config, you can use `pulseaudio -k` to reload PA.
+
+If your alsa settings get messed up after setting up virtualmic, store a backup of settings in `~/.config/asound.state` from which to restore settings after setting up the mic.
+
