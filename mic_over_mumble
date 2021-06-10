@@ -7,11 +7,17 @@ set -euo pipefail
 # PAID = PulseAudio ID
 # ID = PID / process ID
 
+VAR_FOLDER="/var/run/user/$UID/mic_over_mumble"
+
+
 main () {
-    set_up
-    echo "Press Return to shut down..."
-    read -n1 -s -r
-    shut_down
+    read -n1 -p "Set up the mic or close? (s/c): " todo
+    echo
+    case $todo in
+        s|S) set_up ;;
+        c|C) shut_down ;;
+        *) echo "What??" ;;
+    esac
 }
 
 prepare_env () {
@@ -38,10 +44,12 @@ run_mumble_client_wizard () {
 }
 
 set_up () {
+    mkdir "$VAR_FOLDER"
     prepare_env
     start_mumble_server
     start_mumble_client
     change_pa_config
+    restore_alsa_settings
     echo "Done. Please use pavucontrol to ensure everything works."
     print_ip
 }
@@ -51,12 +59,13 @@ shut_down () {
     stop_murmur_client
     stop_murmur_server
     restore_pa_config
+    rm -r "$VAR_FOLDER"
 }
 
 start_mumble_client () {
     echo "Starting Mumble client (a window should appear in a moment)..."
     mumble "mumble://localhost" >/dev/null 2>&1 &
-    MUMBLE_CLIENT_ID=$!
+    echo "$!" > "$VAR_FOLDER/pid"
     # FIXME: I don't remember why I thought this
     # was necessary.
     disown
@@ -69,7 +78,7 @@ start_mumble_client () {
 
 stop_murmur_client () {
     echo "Stopping Mumble client..."
-    kill -KILL "$MUMBLE_CLIENT_ID" || true
+    kill -KILL $(<"$VAR_FOLDER/pid") || true
     sleep 2
 }
 
@@ -111,10 +120,12 @@ add_sink () {
         sink_properties=device.description=Loopback_of_Mumble)
     sleep 1
     SINK_PAID=$(get_sink_paid)
+    echo "$SINK_MODULE_PAID" > "$VAR_FOLDER/sink_module_paid"
+    echo "$SINK_PAID" > "$VAR_FOLDER/sink_paid"
 }
 
 remove_sink () {
-    pactl unload-module "$SINK_MODULE_PAID"
+    pactl unload-module $(<"$VAR_FOLDER/sink_module_paid")
 }
 
 add_source () {
@@ -124,15 +135,16 @@ add_source () {
         source_name=VirtualMic \
         master=Loopback_of_Mumble.monitor \
         source_properties=device.description=VirtualMic)
+    echo "$SOURCE_MODULE_PAID" > "$VAR_FOLDER/source_module_paid"
 }
 
 remove_source () {
-    pactl unload-module "$SOURCE_MODULE_PAID"
+    pactl unload-module $(<"$VAR_FOLDER/source_module_paid")
 }
 
 move_mumble_to_sink () {
     MUMBLE_CLIENT_PAID=$(get_mumble_client_paid)
-    pacmd move-sink-input "$MUMBLE_CLIENT_PAID" "$SINK_PAID"
+    pacmd move-sink-input "$MUMBLE_CLIENT_PAID" $(<"$VAR_FOLDER/sink_paid")
 }
 
 set_default_source () {
@@ -200,6 +212,13 @@ take_second_column () {
 # device is the default one.
 cut_active_device_indicator () {
     cut -c 5-
+}
+
+restore_alsa_settings() {
+    if [ -f ~/.config/asound.state ]; then
+        echo "Restoring alsa settings"
+        alsactl --file ~/.config/asound.state restore
+    fi
 }
 
 print_ip () {
