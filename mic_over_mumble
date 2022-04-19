@@ -149,14 +149,14 @@ get_mumble_client_paid () {
         take_second_column)
 
     if [ -z "$result" ]; then
-        echo "Error: Mumble client did not connect to PulseAudio (yet?)." 2>&1
-        print_how_to_restart 2>&1
+        echo "Error: Mumble client did not connect to PulseAudio (yet?)." 1>&2
+        print_how_to_restart 1>&2
         exit 1
     fi
 
     if [ "$(echo "$result" | wc -l)" != "1" ]; then
-        echo "Error: Multiple Mumble instances found." 2>&1
-        print_how_to_restart 2>&1
+        echo "Error: Multiple Mumble instances found." 1>&2
+        print_how_to_restart 1>&2
         exit 1
     fi
 
