@@ -132,7 +132,7 @@ remove_source () {
 
 move_mumble_to_sink () {
     MUMBLE_CLIENT_PAID=$(get_mumble_client_paid)
-    pacmd move-sink-input "$MUMBLE_CLIENT_PAID" "$SINK_PAID"
+    pactl move-sink-input "$MUMBLE_CLIENT_PAID" "$SINK_PAID"
 }
 
 set_default_source () {
@@ -142,7 +142,7 @@ set_default_source () {
 # Data fetching & parsing.
 
 get_mumble_client_paid () {
-    result=$(pacmd list-sink-inputs |
+    result=$(pactl list sink-inputs |
         grep -F -e "index: " -e "media.name = " |
         cut_every_second_newline |
         grep -F -e "Mumble" |
@@ -164,7 +164,7 @@ get_mumble_client_paid () {
 }
 
 get_sink_paid () {
-    result=$(pacmd list-sinks |
+    result=$(pactl list sinks |
         grep -F -e "index: " -e "name: " |
         cut_every_second_newline |
         grep -F -e "Loopback" |
@@ -221,7 +221,7 @@ print_ip () {
 
 print_how_to_restart () {
     echo "Please find the reason why this happened, try fixing it"
-    echo "(\`pacmd list-sink-inputs\` and \`pacmd list-sinks\` may be"
+    echo "(\`pactl list sink-inputs\` and \`pactl list sinks\` may be"
     echo "useful), then kill mumble and murmurd, restart PulseAudio via"
     echo "\`pulseaudio -k\`, and finally, restart the script."
 }
