@@ -75,7 +75,7 @@ stop_murmur_client () {
 
 start_mumble_server () {
     echo "Starting Mumble server (murmurd)..."
-    murmurd -ini ./murmur.ini &
+    mumble-server -ini ./murmur.ini &
     # Murmur forks, so the PID acquired by `$!`
     # wouldn't help us much.
     sleep 5
@@ -84,7 +84,7 @@ start_mumble_server () {
 stop_murmur_server () {
     echo "Stopping Mumble server..."
     # FIXME: find a better way to kill Murmur.
-    pkill murmurd || true
+    pkill mumble-server || true
 }
 
 change_pa_config () {
@@ -221,8 +221,8 @@ print_ip () {
 
 print_how_to_restart () {
     echo "Please find the reason why this happened, try fixing it"
-    echo "(\`pactl list sink-inputs\` and \`pactl list sinks\` may be"
-    echo "useful), then kill mumble and murmurd, restart PulseAudio via"
+    echo "(\`pactl list-sink-inputs\` and \`pacmd list-sinks\` may be"
+    echo "useful), then kill mumble and mumble-server, restart PulseAudio via"
     echo "\`pulseaudio -k\`, and finally, restart the script."
 }
 
