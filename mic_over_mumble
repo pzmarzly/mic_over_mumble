@@ -75,7 +75,11 @@ stop_murmur_client () {
 
 start_mumble_server () {
     echo "Starting Mumble server (murmurd)..."
-    mumble-server -ini ./murmur.ini &
+    MURMURD_EXE=/usr/sbin/murmurd
+    if [ ! -e "$MURMURD_EXE" ]; then
+        MURMURD_EXE=/usr/bin/mumble-server
+    fi
+    $MURMURD_EXE -ini ./murmur.ini &
     # Murmur forks, so the PID acquired by `$!`
     # wouldn't help us much.
     sleep 5
@@ -84,7 +88,7 @@ start_mumble_server () {
 stop_murmur_server () {
     echo "Stopping Mumble server..."
     # FIXME: find a better way to kill Murmur.
-    pkill mumble-server || true
+    pkill mumble-server murmurd || true
 }
 
 change_pa_config () {
