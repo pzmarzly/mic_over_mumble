@@ -221,7 +221,7 @@ print_ip () {
 
 print_how_to_restart () {
     echo "Please find the reason why this happened, try fixing it"
-    echo "(\`pactl list-sink-inputs\` and \`pacmd list-sinks\` may be"
+    echo "(\`pactl list-sink-inputs\` and \`pactl list-sinks\` may be"
     echo "useful), then kill mumble and mumble-server, restart PulseAudio via"
     echo "\`pulseaudio -k\`, and finally, restart the script."
 }
