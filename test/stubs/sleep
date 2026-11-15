@@ -1,0 +1,7 @@
+#!/bin/bash
+# Makes the script's fixed waits 10 times shorter (at least 0.1 s).
+export LC_ALL=C
+for real in /usr/bin/sleep /bin/sleep; do
+    [ -x "$real" ] && break
+done
+exec "$real" "$(awk -v t="${1:-0}" 'BEGIN { t /= 10; print (t < 0.1 ? 0.1 : t) }')"

@@ -1,0 +1,38 @@
+Sink Input #107
+	Driver: PipeWire
+	Owner Module: n/a
+	Client: 106
+	Sink: 84
+	Sample Specification: float32le 2ch 48000Hz
+	Channel Map: front-left,front-right
+	Format: pcm, format.sample_format = "\"float32le\""  format.rate = "48000"  format.channels = "2"  format.channel_map = "\"front-left,front-right\""
+	Corked: no
+	Mute: no
+	Volume: front-left: 65536 / 100% / 0.00 dB,   front-right: 65536 / 100% / 0.00 dB
+	        balance 0.00
+	Buffer Latency: 0 usec
+	Sink Latency: 0 usec
+	Resample method: PipeWire
+	Properties:
+		application.name = "Mumble"
+		node.name = "Playback"
+		media.category = "Playback"
+		media.type = "Audio"
+		media.role = "phone"
+		media.name = "Playback"
+		stream.is-live = "true"
+		node.want-driver = "true"
+		node.autoconnect = "true"
+		media.class = "Stream/Output/Audio"
+		target.object = "Loopback_of_Mumble"
+		adapt.follower.spa-node = ""
+		object.register = "false"
+		factory.id = "7"
+		clock.quantum-limit = "8192"
+		factory.mode = "split"
+		audio.adapt.follower = ""
+		library.name = "audioconvert/libspa-audioconvert"
+		client.id = "85"
+		object.id = "86"
+		object.serial = "107"
+		module-stream-restore.id = "sink-input-by-media-role:phone"

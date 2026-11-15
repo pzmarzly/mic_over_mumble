@@ -1,0 +1,3 @@
+50	Speakers	PipeWire	float32le 2ch 48000Hz	SUSPENDED
+57	MicBus	PipeWire	float32le 2ch 48000Hz	IDLE
+84	Loopback_of_Mumble	PipeWire	float32le 2ch 48000Hz	RUNNING

@@ -1,0 +1,222 @@
+#!/bin/bash
+# Fake pactl talking to a fake PipeWire 1.0.5 (pipewire-pulse) server.
+# Output is replayed from the real captures in test/fixtures; the blocks
+# for our sink/source/Mumble streams are the captured ones with new IDs.
+# State lives in $STUB_STATE. See test/README.md.
+set -euo pipefail
+S=${STUB_STATE:?STUB_STATE must be set}
+FIX=$(cd "$(dirname "${BASH_SOURCE[0]}")/../fixtures" && pwd)
+RUN=$FIX/pipewire-running IDLE=$FIX/pipewire-idle
+# Blocks of the running captures that belong to the script or Mumble.
+# They come last in each capture; everything before them is static.
+DYN='^(Sink #84|Source #(84|92)|Module #53687091[67]|Sink Input #107|Source Output #(93|105))$'
+MUMBLE_OUT=107 MUMBLE_IN=105 # Mumble's sink input / source output, as captured
+SPEC=$'PipeWire\tfloat32le 2ch 48000Hz'
+
+[ -n "${STUB_NOLOG:-}" ] || printf '%s\n' "$*" >> "$S/pactl.log"
+if [ ! -e "$S/modules" ]; then
+    : > "$S/modules" # "<module> <type> <node serial> <name> <master> <args>"
+    echo Speakers > "$S/default_sink" # as in the VM; setup() changes them
+    echo HwMic > "$S/default_source"
+    echo 536870916 > "$S/next_module"
+    echo 84 > "$S/next_serial"
+fi
+
+fail() { echo "Failure: $1" >&2; exit 1; }
+unsupported() {
+    printf '%s\n' "$CMD" >> "$S/pactl.errors"
+    echo "pactl stub: unsupported command: $CMD" >&2
+    exit 1
+}
+CMD="$*"
+
+# pactl translates its labels. These German labels are what pactl 16.1
+# printed on Ubuntu 24.04 with LANG=de_DE.UTF-8 (language-pack-de).
+localize() {
+    case ${LC_ALL:-${LC_MESSAGES:-${LANG:-}}} in
+        de*) sed -e 's/^Default Sink:/Standard-Ziel:/' \
+                 -e 's/^Default Source:/Standard-Quelle:/' \
+                 -e 's/^Sink Input #/Ziel-Eingabe #/' -e 's/^Sink #/Ziel #/' \
+                 -e 's/^\tSink:/\tZiel:/' -e 's/^Source #/Quelle #/' ;;
+        *) cat ;;
+    esac
+}
+
+# Long listings: blocks separated by one empty line.
+SEP=
+emit() { # emit TEXT (not in a pipeline: it must update $SEP)
+    if [ -n "$1" ]; then
+        printf '%s%s\n' "$SEP" "$1"
+        SEP=$'\n'
+    fi
+}
+static() { # the static part of a running capture
+    awk -v re="$DYN" '$0 ~ re { exit } b { print "" } { b = ($0 == "") } !b' "$RUN/$1"
+}
+block() { # block FILE HEADER: one captured block
+    awk -v h="$2" '$0 == h { p = 1 } p && $0 == "" { exit } p' "$RUN/$1"
+}
+target() { # sed script setting target.object to $1 (deleting it if empty)
+    if [ -n "$1" ]; then
+        echo "s/target\.object = \".*\"/target.object = \"$1\"/"
+    else
+        echo '/target\.object = /d'
+    fi
+}
+modules() { cat "$S/modules"; }
+
+short_sinks() {
+    cat "$IDLE/list_short_sinks.txt"
+    awk -F'\t' -v s="$SPEC" '$2 == "module-null-sink" { print $3 "\t" $4 "\t" s "\tRUNNING" }' "$S/modules"
+}
+short_sources() { # null sinks have a monitor source with the same index
+    cat "$IDLE/list_short_sources.txt"
+    awk -F'\t' -v s="$SPEC" '{ m = $2 == "module-null-sink" ? ".monitor" : ""
+        print $3 "\t" $4 m "\t" s "\tRUNNING" }' "$S/modules"
+}
+field() { # field LISTER COLUMN ID_OR_NAME (reads all input: no SIGPIPE)
+    "$1" | awk -F'\t' -v c="$2" -v x="$3" \
+        '!found && ($1 == x || $2 == x) { print $c; found = 1 } END { exit !found }'
+}
+has_module() { # has_module FILE ID
+    awk -F'\t' -v m="$2" '$1 == m { found = 1 } END { exit !found }' "$1"
+}
+
+# Mumble's streams exist while the fake client runs (see stubs/mumble).
+mumble_running() {
+    local pid state
+    pid=$(cat "$S/mumble.pid" 2>/dev/null) || return 1
+    state=$(cut -d' ' -f3 "/proc/$pid/stat" 2>/dev/null) || return 1
+    [ -n "$state" ] && [ "$state" != Z ]
+}
+mumble_target() { cat "$S/mumble.target" 2>/dev/null || true; }
+mumble_sink() { # serial of the sink Mumble plays into
+    field short_sinks 1 "$(mumble_target)" ||
+        field short_sinks 1 "$(cat "$S/default_sink")"
+}
+default_source() { field short_sources 1 "$(cat "$S/default_source")"; }
+
+long() { # long FILE: the long listing captured in FILE, for the current state
+    local f=$1 mod type serial name master args
+    emit "$(static "$f")"
+    while IFS=$'\t' read -r mod type serial name master args; do
+        case $f:$type in
+            list_sinks.txt:module-null-sink)
+                dyn 'Sink #84' Loopback_of_Mumble "$name" ;;
+            list_sources.txt:module-null-sink)
+                dyn 'Source #84' Loopback_of_Mumble "$name" ;;
+            list_sources.txt:*) dyn 'Source #92' VirtualMic "$name" ;;
+            list_modules.txt:module-null-sink) serial=$mod
+                dyn 'Module #536870916' 'Name: .*' "Name: $type" -e "s|^\tArgument: .*|\tArgument: $args|" ;;
+            list_modules.txt:*) serial=$mod
+                dyn 'Module #536870917' 'Name: .*' "Name: $type" -e "s|^\tArgument: .*|\tArgument: $args|" ;;
+            list_source-outputs.txt:module-null-sink) ;;
+            list_source-outputs.txt:*) serial=$((serial + 1)) # as captured: VirtualMic 92, input 93
+                dyn 'Source Output #93' VirtualMic "$name" -e "$(target "${master%.monitor}")" \
+                    -e "s/^\tSource: .*/\tSource: $(field short_sources 1 "$master")/" ;;
+        esac
+    done < <(modules)
+    if mumble_running; then
+        case $f in
+            list_sink-inputs.txt) emit "$(block "$f" "Sink Input #$MUMBLE_OUT" | sed -e \
+                "s/^\tSink: .*/\tSink: $(mumble_sink)/" -e "$(target "$(mumble_target)")")" ;;
+            list_source-outputs.txt) emit "$(block "$f" "Source Output #$MUMBLE_IN" | sed -e \
+                "s/^\tSource: .*/\tSource: $(default_source)/" -e "$(target "$(mumble_target)")")" ;;
+        esac
+    fi
+}
+# dyn HEADER OLD NEW [SED_ARGS]: block HEADER of $f, renumbered ($serial,
+# $mod) and with OLD replaced by NEW.
+dyn() {
+    emit "$(block "$f" "$1" | sed -e "1s/#[0-9]*\$/#$serial/" \
+        -e "s/object\.serial = \"[0-9]*\"/object.serial = \"$serial\"/" \
+        -e "s/53687091[67]/$mod/g" -e "s/$2/$3/g" "${@:4}")"
+}
+
+load_module() { # load_module TYPE ARGS...
+    local type=$1 key name="" master=- mod serial a
+    shift
+    case $type in
+        module-null-sink) key=sink_name ;;
+        module-remap-source | module-virtual-source) key=source_name ;;
+        *) unsupported ;;
+    esac
+    for a in "$@"; do
+        case $a in
+            "$key"=*) name=${a#*=} ;;
+            master=*) master=${a#*=} ;;
+        esac
+    done
+    [ -n "$name" ] || unsupported # the scripts always name their devices
+    if [ "$key" = source_name ]; then
+        field short_sources 2 "$master" > /dev/null || fail "Module initialization failed"
+    fi
+    mod=$(cat "$S/next_module") serial=$(cat "$S/next_serial")
+    echo $((mod + 1)) > "$S/next_module"
+    echo $((serial + 8)) > "$S/next_serial"
+    printf '%s\t%s\t%s\t%s\t%s\t%s\n' "$mod" "$type" "$serial" "$name" "$master" "$*" >> "$S/modules"
+    # STUB_NULL_SINK_BECOMES_DEFAULT=1: a server or policy that switches to
+    # new devices (the script should restore the default sink at once).
+    if [ "$type" = module-null-sink ] && [ -n "${STUB_NULL_SINK_BECOMES_DEFAULT:-}" ]; then
+        echo "$name" > "$S/default_sink"
+    fi
+    echo "$mod"
+}
+unload_module() {
+    if ! has_module "$S/modules" "$1"; then
+        ! has_module "$IDLE/list_short_modules.txt" "$1" || unsupported # not ours
+        fail "No such entity"
+    fi
+    awk -F'\t' -v m="$1" '$1 != m' "$S/modules" > "$S/modules.new"
+    mv "$S/modules.new" "$S/modules"
+    # Like plain PulseAudio 16.1 (checked on Ubuntu 24.04): when the
+    # default device goes away, Speakers/HwMic become the default, not the
+    # one that was the default before. (WirePlumber 0.4 goes back to the
+    # previous default by itself, so this is the stricter case.) The tests
+    # start with MicBus/MicBus.monitor, so a script that doesn't restore
+    # the defaults itself ends up with different ones.
+    field short_sinks 2 "$(cat "$S/default_sink")" > /dev/null || echo Speakers > "$S/default_sink"
+    field short_sources 2 "$(cat "$S/default_source")" > /dev/null || echo HwMic > "$S/default_source"
+}
+
+case "$*" in
+    info)
+        sed -e "s/^Default Sink: .*/Default Sink: $(cat "$S/default_sink")/" \
+            -e "s/^Default Source: .*/Default Source: $(cat "$S/default_source")/" \
+            "$RUN/info.txt" | localize ;;
+    "list sinks" | "list sources" | "list modules" | "list sink-inputs" | "list source-outputs")
+        long "list_$2.txt" | localize ;;
+    "list short sinks") short_sinks ;;
+    "list short sources") short_sources ;;
+    "list short modules")
+        cat "$IDLE/list_short_modules.txt"
+        awk -F'\t' '{ printf "%s\t%s\t%s\t\n", $1, $2, $6 }' "$S/modules" ;;
+    "list short sink-inputs")
+        if mumble_running; then printf '%s\t%s\t106\t%s\n' $MUMBLE_OUT "$(mumble_sink)" "$SPEC"; fi ;;
+    "list short source-outputs")
+        printf '65\t57\t-\t%s\n' "$SPEC"
+        while IFS=$'\t' read -r _ type serial _ master _; do
+            if [ "$type" != module-null-sink ]; then
+                printf '%s\t%s\t-\t%s\n' $((serial + 1)) "$(field short_sources 1 "$master")" "$SPEC"
+            fi
+        done < <(modules)
+        if mumble_running; then
+            printf '%s\t%s\t104\tPipeWire\tfloat32le 1ch 48000Hz\n' $MUMBLE_IN "$(default_source)"
+        fi ;;
+    get-default-sink) cat "$S/default_sink" ;;
+    get-default-source) cat "$S/default_source" ;;
+    "set-default-sink "*) [ $# = 2 ] || unsupported
+        field short_sinks 2 "$2" > "$S/default_sink.new" || fail "No such entity"
+        mv "$S/default_sink.new" "$S/default_sink" ;;
+    "set-default-source "*) [ $# = 2 ] || unsupported
+        field short_sources 2 "$2" > "$S/default_source.new" || fail "No such entity"
+        mv "$S/default_source.new" "$S/default_source" ;;
+    "load-module "*) shift; load_module "$@" ;;
+    "unload-module "*) [[ $# = 2 && $2 =~ ^[0-9]+$ ]] || unsupported
+        unload_module "$2" ;;
+    "move-sink-input "*) [ $# = 3 ] || unsupported
+        { [ "$2" = $MUMBLE_OUT ] && mumble_running; } || fail "No such entity"
+        field short_sinks 2 "$3" > "$S/mumble.target.new" || fail "No such entity"
+        mv "$S/mumble.target.new" "$S/mumble.target" ;;
+    *) unsupported ;;
+esac
