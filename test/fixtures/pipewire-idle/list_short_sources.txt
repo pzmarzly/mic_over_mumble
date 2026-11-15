@@ -1,0 +1,3 @@
+50	Speakers.monitor	PipeWire	float32le 2ch 48000Hz	SUSPENDED
+57	MicBus.monitor	PipeWire	float32le 2ch 48000Hz	SUSPENDED
+64	HwMic	PipeWire	float32le 2ch 48000Hz	SUSPENDED

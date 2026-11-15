@@ -1,0 +1,1 @@
+107	84	106	PipeWire	float32le 2ch 48000Hz
