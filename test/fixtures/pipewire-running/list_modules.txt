@@ -1,0 +1,261 @@
+Module #1
+	Name: libpipewire-module-rt
+	Argument: {
+            nice.level    = -11
+            rt.prio       = 88
+            #rt.time.soft = -1
+            #rt.time.hard = -1
+            #uclamp.min = 0
+            #uclamp.max = 1024
+        }
+	Usage counter: n/a
+	Properties:
+		module.name = "libpipewire-module-rt"
+		object.id = "1"
+		object.serial = "1"
+		module.author = "Wim Taymans <wim.taymans@gmail.com>"
+		module.description = "Use realtime thread scheduling, falling back to RTKit"
+		module.usage = "( nice.level=<priority: default 20(don't change)> ) ( rt.prio=<priority: default 83> ) ( rt.time.soft=<in usec: default -1> ) ( rt.time.hard=<in usec: default -1> ) ( rlimits.enabled=<default true> ) ( rtportal.enabled=<default true> ) ( rtkit.enabled=<default true> ) ( uclamp.min=<default 0> ) ( uclamp.max=<default 1024> )"
+		module.version = "1.0.5"
+		nice.level = "-11"
+		rt.prio = "88"
+
+Module #2
+	Name: libpipewire-module-protocol-native
+	Argument: {
+            # List of server Unix sockets, and optionally permissions
+            #sockets = [ { name = "pipewire-0" }, { name = "pipewire-0-manager" } ]
+        }
+	Usage counter: n/a
+	Properties:
+		module.name = "libpipewire-module-protocol-native"
+		object.id = "2"
+		object.serial = "2"
+		module.author = "Wim Taymans <wim.taymans@gmail.com>"
+		module.description = "Native protocol using unix sockets"
+		module.version = "1.0.5"
+
+Module #3
+	Name: libpipewire-module-profiler
+	Argument: 
+	Usage counter: n/a
+	Properties:
+		module.name = "libpipewire-module-profiler"
+		object.id = "3"
+		object.serial = "3"
+		module.author = "Wim Taymans <wim.taymans@gmail.com>"
+		module.description = "Generate Profiling data"
+		module.version = "1.0.5"
+
+Module #5
+	Name: libpipewire-module-metadata
+	Argument: 
+	Usage counter: n/a
+	Properties:
+		module.name = "libpipewire-module-metadata"
+		object.id = "5"
+		object.serial = "5"
+		module.author = "Wim Taymans <wim.taymans@gmail.com>"
+		module.description = "Allow clients to create metadata store"
+		module.version = "1.0.5"
+
+Module #7
+	Name: libpipewire-module-spa-device-factory
+	Argument: 
+	Usage counter: n/a
+	Properties:
+		module.name = "libpipewire-module-spa-device-factory"
+		object.id = "7"
+		object.serial = "7"
+		module.author = "Wim Taymans <wim.taymans@gmail.com>"
+		module.description = "Provide a factory to make SPA devices"
+		module.version = "1.0.5"
+
+Module #9
+	Name: libpipewire-module-spa-node-factory
+	Argument: 
+	Usage counter: n/a
+	Properties:
+		module.name = "libpipewire-module-spa-node-factory"
+		object.id = "9"
+		object.serial = "9"
+		module.author = "Wim Taymans <wim.taymans@gmail.com>"
+		module.description = "Provide a factory to make SPA nodes"
+		module.version = "1.0.5"
+
+Module #11
+	Name: libpipewire-module-client-node
+	Argument: 
+	Usage counter: n/a
+	Properties:
+		module.name = "libpipewire-module-client-node"
+		object.id = "11"
+		object.serial = "11"
+		module.author = "Wim Taymans <wim.taymans@gmail.com>"
+		module.description = "Allow clients to create and control remote nodes"
+		module.version = "1.0.5"
+
+Module #13
+	Name: libpipewire-module-client-device
+	Argument: 
+	Usage counter: n/a
+	Properties:
+		module.name = "libpipewire-module-client-device"
+		object.id = "13"
+		object.serial = "13"
+		module.author = "Wim Taymans <wim.taymans@gmail.com>"
+		module.description = "Allow clients to create and control remote devices"
+		module.version = "1.0.5"
+
+Module #15
+	Name: libpipewire-module-portal
+	Argument: 
+	Usage counter: n/a
+	Properties:
+		module.name = "libpipewire-module-portal"
+		object.id = "15"
+		object.serial = "15"
+
+Module #16
+	Name: libpipewire-module-access
+	Argument: {
+            # Socket-specific access permissions
+            #access.socket = { pipewire-0 = "default", pipewire-0-manager = "unrestricted" }
+
+            # Deprecated legacy mode (not socket-based),
+            # for now enabled by default if access.socket is not specified
+            #access.legacy = true
+        }
+	Usage counter: n/a
+	Properties:
+		module.name = "libpipewire-module-access"
+		object.id = "16"
+		object.serial = "16"
+		module.author = "Wim Taymans <wim.taymans@gmail.com>"
+		module.description = "Perform access check"
+		module.usage = "( access.socket={ <socket>=<access>, ... } ) ( access.legacy=true ) "
+		module.version = "1.0.5"
+
+Module #17
+	Name: libpipewire-module-adapter
+	Argument: 
+	Usage counter: n/a
+	Properties:
+		module.name = "libpipewire-module-adapter"
+		object.id = "17"
+		object.serial = "17"
+		module.author = "Wim Taymans <wim.taymans@gmail.com>"
+		module.description = "Manage adapter nodes"
+		module.version = "1.0.5"
+
+Module #19
+	Name: libpipewire-module-link-factory
+	Argument: 
+	Usage counter: n/a
+	Properties:
+		module.name = "libpipewire-module-link-factory"
+		object.id = "19"
+		object.serial = "19"
+		module.author = "Wim Taymans <wim.taymans@gmail.com>"
+		module.description = "Allow clients to create links"
+		module.usage = "( allow.link.passive=<bool, default false> ) "
+		module.version = "1.0.5"
+
+Module #21
+	Name: libpipewire-module-session-manager
+	Argument: 
+	Usage counter: n/a
+	Properties:
+		module.name = "libpipewire-module-session-manager"
+		object.id = "21"
+		object.serial = "21"
+		module.author = "George Kiagiadakis <george.kiagiadakis@collabora.com>"
+		module.description = "Implements objects for session management"
+		module.version = "1.0.5"
+
+Module #28
+	Name: libpipewire-module-jackdbus-detect
+	Argument: {
+            #jack.library     = libjack.so.0
+            #jack.server      = null
+            #jack.client-name = PipeWire
+            #jack.connect     = true
+            #tunnel.mode      = duplex  # source|sink|duplex
+            source.props = {
+                #audio.channels = 2
+		#midi.ports = 1
+                #audio.position = [ FL FR ]
+                # extra sink properties
+            }
+            sink.props = {
+                #audio.channels = 2
+		#midi.ports = 1
+                #audio.position = [ FL FR ]
+                # extra sink properties
+            }
+        }
+	Usage counter: n/a
+	Properties:
+		module.name = "libpipewire-module-jackdbus-detect"
+		object.id = "28"
+		object.serial = "28"
+
+Module #536870912
+	Name: module-always-sink
+	Argument: 
+	Usage counter: n/a
+	Properties:
+		module.author = "Pauli Virtanen <pav@iki.fi>"
+		module.description = "Always keeps at least one sink loaded even if it's a null one"
+		module.usage = "sink_name=<name of sink>"
+		module.version = "1.0.5"
+
+Module #536870913
+	Name: module-null-sink
+	Argument: sink_name=Speakers sink_properties=device.description=Speakers
+	Usage counter: n/a
+	Properties:
+		module.author = "Wim Taymans <wim.taymans@gmail.com>"
+		module.description = "A NULL sink"
+		module.usage = "sink_name=<name of sink> sink_properties=<properties for the sink> format=<sample format> rate=<sample rate> channels=<number of channels> channel_map=<channel map>"
+		module.version = "1.0.5"
+
+Module #536870914
+	Name: module-null-sink
+	Argument: sink_name=MicBus sink_properties=device.description=MicBus
+	Usage counter: n/a
+	Properties:
+		module.author = "Wim Taymans <wim.taymans@gmail.com>"
+		module.description = "A NULL sink"
+		module.usage = "sink_name=<name of sink> sink_properties=<properties for the sink> format=<sample format> rate=<sample rate> channels=<number of channels> channel_map=<channel map>"
+		module.version = "1.0.5"
+
+Module #536870915
+	Name: module-remap-source
+	Argument: source_name=HwMic master=MicBus.monitor source_properties=device.description=HwMic
+	Usage counter: n/a
+	Properties:
+		module.author = "Wim Taymans <wim.taymans@gmail.com>"
+		module.description = "Remap source channels"
+		module.usage = "source_name=<name for the source> source_properties=<properties for the source> master=<name of source to filter> master_channel_map=<channel map> format=<sample format> rate=<sample rate> channels=<number of channels> channel_map=<channel map> resample_method=<resampler> remix=<remix channels?>"
+		module.version = "1.0.5"
+
+Module #536870916
+	Name: module-null-sink
+	Argument: sink_name=Loopback_of_Mumble sink_properties=device.description=Loopback_of_Mumble
+	Usage counter: n/a
+	Properties:
+		module.author = "Wim Taymans <wim.taymans@gmail.com>"
+		module.description = "A NULL sink"
+		module.usage = "sink_name=<name of sink> sink_properties=<properties for the sink> format=<sample format> rate=<sample rate> channels=<number of channels> channel_map=<channel map>"
+		module.version = "1.0.5"
+
+Module #536870917
+	Name: module-remap-source
+	Argument: source_name=VirtualMic master=Loopback_of_Mumble.monitor source_properties=device.description=VirtualMic
+	Usage counter: n/a
+	Properties:
+		module.author = "Wim Taymans <wim.taymans@gmail.com>"
+		module.description = "Remap source channels"
+		module.usage = "source_name=<name for the source> source_properties=<properties for the source> master=<name of source to filter> master_channel_map=<channel map> format=<sample format> rate=<sample rate> channels=<number of channels> channel_map=<channel map> resample_method=<resampler> remix=<remix channels?>"
+		module.version = "1.0.5"

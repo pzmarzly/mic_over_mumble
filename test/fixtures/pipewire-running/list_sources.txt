@@ -1,0 +1,205 @@
+Source #50
+	State: SUSPENDED
+	Name: Speakers.monitor
+	Description: Monitor of Speakers
+	Driver: PipeWire
+	Sample Specification: float32le 2ch 48000Hz
+	Channel Map: front-left,front-right
+	Owner Module: 536870913
+	Mute: no
+	Volume: front-left: 65536 / 100% / 0.00 dB,   front-right: 65536 / 100% / 0.00 dB
+	        balance 0.00
+	Base Volume: 65536 / 100% / 0.00 dB
+	Monitor of Sink: Speakers
+	Latency: 0 usec, configured 0 usec
+	Flags: HARDWARE DECIBEL_VOLUME LATENCY 
+	Properties:
+		node.name = "Speakers"
+		device.description = "Speakers"
+		audio.channels = "2"
+		audio.position = "[ FL, FR ]"
+		media.class = "Audio/Sink"
+		factory.name = "support.null-audio-sink"
+		monitor.channel-volumes = "true"
+		monitor.passthrough = "true"
+		pulse.module.id = "536870913"
+		factory.id = "18"
+		clock.quantum-limit = "8192"
+		client.id = "48"
+		node.driver = "true"
+		factory.mode = "merge"
+		audio.adapt.follower = ""
+		library.name = "audioconvert/libspa-audioconvert"
+		object.id = "49"
+		object.serial = "50"
+		device.class = "monitor"
+	Formats:
+		pcm
+
+Source #57
+	State: IDLE
+	Name: MicBus.monitor
+	Description: Monitor of MicBus
+	Driver: PipeWire
+	Sample Specification: float32le 2ch 48000Hz
+	Channel Map: front-left,front-right
+	Owner Module: 536870914
+	Mute: no
+	Volume: front-left: 65536 / 100% / 0.00 dB,   front-right: 65536 / 100% / 0.00 dB
+	        balance 0.00
+	Base Volume: 65536 / 100% / 0.00 dB
+	Monitor of Sink: MicBus
+	Latency: 0 usec, configured 0 usec
+	Flags: HARDWARE DECIBEL_VOLUME LATENCY 
+	Properties:
+		node.name = "MicBus"
+		device.description = "MicBus"
+		audio.channels = "2"
+		audio.position = "[ FL, FR ]"
+		media.class = "Audio/Sink"
+		factory.name = "support.null-audio-sink"
+		monitor.channel-volumes = "true"
+		monitor.passthrough = "true"
+		pulse.module.id = "536870914"
+		factory.id = "18"
+		clock.quantum-limit = "8192"
+		client.id = "39"
+		node.driver = "true"
+		factory.mode = "merge"
+		audio.adapt.follower = ""
+		library.name = "audioconvert/libspa-audioconvert"
+		object.id = "50"
+		object.serial = "57"
+		device.class = "monitor"
+	Formats:
+		pcm
+
+Source #64
+	State: IDLE
+	Name: HwMic
+	Description: HwMic
+	Driver: PipeWire
+	Sample Specification: float32le 2ch 48000Hz
+	Channel Map: front-left,front-right
+	Owner Module: 536870915
+	Mute: no
+	Volume: front-left: 65536 / 100% / 0.00 dB,   front-right: 65536 / 100% / 0.00 dB
+	        balance 0.00
+	Base Volume: 65536 / 100% / 0.00 dB
+	Monitor of Sink: n/a
+	Latency: 0 usec, configured 0 usec
+	Flags: DECIBEL_VOLUME LATENCY 
+	Properties:
+		node.name = "HwMic"
+		device.description = "HwMic"
+		media.class = "Audio/Source"
+		device.class = "filter"
+		audio.channels = "2"
+		audio.position = "[ FL, FR ]"
+		node.group = "remap-source-536870915"
+		pulse.module.id = "536870915"
+		node.link-group = "loopback-894-12"
+		node.virtual = "true"
+		resample.prefill = "true"
+		resample.disable = "true"
+		media.name = "HwMic output"
+		stream.is-live = "true"
+		node.want-driver = "true"
+		node.autoconnect = "true"
+		node.trigger = "true"
+		adapt.follower.spa-node = ""
+		object.register = "false"
+		factory.id = "6"
+		clock.quantum-limit = "8192"
+		factory.mode = "split"
+		audio.adapt.follower = ""
+		library.name = "audioconvert/libspa-audioconvert"
+		client.id = "55"
+		object.id = "56"
+		object.serial = "64"
+	Formats:
+		pcm
+
+Source #84
+	State: RUNNING
+	Name: Loopback_of_Mumble.monitor
+	Description: Monitor of Loopback_of_Mumble
+	Driver: PipeWire
+	Sample Specification: float32le 2ch 48000Hz
+	Channel Map: front-left,front-right
+	Owner Module: 536870916
+	Mute: no
+	Volume: front-left: 65536 / 100% / 0.00 dB,   front-right: 65536 / 100% / 0.00 dB
+	        balance 0.00
+	Base Volume: 65536 / 100% / 0.00 dB
+	Monitor of Sink: Loopback_of_Mumble
+	Latency: 0 usec, configured 0 usec
+	Flags: HARDWARE DECIBEL_VOLUME LATENCY 
+	Properties:
+		node.name = "Loopback_of_Mumble"
+		device.description = "Loopback_of_Mumble"
+		audio.channels = "2"
+		audio.position = "[ FL, FR ]"
+		media.class = "Audio/Sink"
+		factory.name = "support.null-audio-sink"
+		monitor.channel-volumes = "true"
+		monitor.passthrough = "true"
+		pulse.module.id = "536870916"
+		factory.id = "18"
+		clock.quantum-limit = "8192"
+		client.id = "66"
+		node.driver = "true"
+		factory.mode = "merge"
+		audio.adapt.follower = ""
+		library.name = "audioconvert/libspa-audioconvert"
+		object.id = "67"
+		object.serial = "84"
+		device.class = "monitor"
+	Formats:
+		pcm
+
+Source #92
+	State: RUNNING
+	Name: VirtualMic
+	Description: VirtualMic
+	Driver: PipeWire
+	Sample Specification: float32le 2ch 48000Hz
+	Channel Map: front-left,front-right
+	Owner Module: 536870917
+	Mute: no
+	Volume: front-left: 65536 / 100% / 0.00 dB,   front-right: 65536 / 100% / 0.00 dB
+	        balance 0.00
+	Base Volume: 65536 / 100% / 0.00 dB
+	Monitor of Sink: n/a
+	Latency: 0 usec, configured 0 usec
+	Flags: DECIBEL_VOLUME LATENCY 
+	Properties:
+		node.name = "VirtualMic"
+		device.description = "VirtualMic"
+		media.class = "Audio/Source"
+		device.class = "filter"
+		audio.channels = "2"
+		audio.position = "[ FL, FR ]"
+		node.group = "remap-source-536870917"
+		pulse.module.id = "536870917"
+		node.link-group = "loopback-894-13"
+		node.virtual = "true"
+		resample.prefill = "true"
+		resample.disable = "true"
+		media.name = "VirtualMic output"
+		stream.is-live = "true"
+		node.want-driver = "true"
+		node.autoconnect = "true"
+		node.trigger = "true"
+		adapt.follower.spa-node = ""
+		object.register = "false"
+		factory.id = "6"
+		clock.quantum-limit = "8192"
+		factory.mode = "split"
+		audio.adapt.follower = ""
+		library.name = "audioconvert/libspa-audioconvert"
+		client.id = "72"
+		object.id = "73"
+		object.serial = "92"
+	Formats:
+		pcm
