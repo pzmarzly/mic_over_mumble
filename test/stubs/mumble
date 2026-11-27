@@ -1,0 +1,24 @@
+#!/bin/bash
+# Fake Mumble client. Its playback/capture streams exist (in the pactl
+# stub) while this process lives.
+set -eu
+S=${STUB_STATE:?STUB_STATE must be set}
+printf 'args: %s\nPIPEWIRE_NODE=%s\n' "$*" "${PIPEWIRE_NODE-(unset)}" >> "$S/mumble.log"
+if [ $# = 0 ]; then
+    exit 0 # first-run wizard: the "user" closes it at once
+fi
+# Mumble 1.5's PipeWire backend plays into $PIPEWIRE_NODE; its PulseAudio
+# backend (STUB_MUMBLE_BACKEND=pulse) uses the default sink.
+if [ "${STUB_MUMBLE_BACKEND:-pipewire}" = pipewire ]; then
+    printf '%s\n' "${PIPEWIRE_NODE:-}" > "$S/mumble.target"
+else
+    : > "$S/mumble.target"
+fi
+echo $$ > "$S/mumble.pid"
+# Wait without exec'ing or forking: the script checks that this PID's
+# command line still ends with " mumble://localhost" before killing it,
+# and a child would outlive a SIGKILL.
+fifo=$S/mumble.fifo.$$
+mkfifo "$fifo"
+exec 3<> "$fifo"
+read -r -t 600 -u 3 || true

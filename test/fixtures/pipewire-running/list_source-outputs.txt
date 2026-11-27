@@ -1,0 +1,130 @@
+Source Output #65
+	Driver: PipeWire
+	Owner Module: 536870915
+	Client: n/a
+	Source: 57
+	Sample Specification: float32le 2ch 48000Hz
+	Channel Map: front-left,front-right
+	Format: pcm, format.sample_format = "\"float32ne\""  format.rate = "48000"  format.channels = "2"  format.channel_map = "\"front-left,front-right\""
+	Corked: yes
+	Mute: no
+	Volume: front-left: 65536 / 100% / 0.00 dB,   front-right: 65536 / 100% / 0.00 dB
+	        balance 0.00
+	Buffer Latency: 0 usec
+	Source Latency: 0 usec
+	Resample method: PipeWire
+	Properties:
+		node.name = "input.HwMic"
+		target.object = "MicBus"
+		stream.capture.sink = "true"
+		audio.channels = "2"
+		audio.position = "[ FL, FR ]"
+		node.passive = "true"
+		node.group = "remap-source-536870915"
+		pulse.module.id = "536870915"
+		device.description = "HwMic"
+		node.link-group = "loopback-894-12"
+		node.virtual = "true"
+		resample.prefill = "true"
+		resample.disable = "true"
+		media.name = "HwMic input"
+		stream.is-live = "true"
+		node.want-driver = "true"
+		node.autoconnect = "true"
+		media.class = "Stream/Input/Audio"
+		adapt.follower.spa-node = ""
+		object.register = "false"
+		factory.id = "6"
+		clock.quantum-limit = "8192"
+		factory.mode = "merge"
+		audio.adapt.follower = ""
+		library.name = "audioconvert/libspa-audioconvert"
+		client.id = "55"
+		object.id = "57"
+		object.serial = "65"
+		module-stream-restore.id = "source-output-by-media-name:HwMic input"
+
+Source Output #93
+	Driver: PipeWire
+	Owner Module: 536870917
+	Client: n/a
+	Source: 84
+	Sample Specification: float32le 2ch 48000Hz
+	Channel Map: front-left,front-right
+	Format: pcm, format.sample_format = "\"float32ne\""  format.rate = "48000"  format.channels = "2"  format.channel_map = "\"front-left,front-right\""
+	Corked: no
+	Mute: no
+	Volume: front-left: 65536 / 100% / 0.00 dB,   front-right: 65536 / 100% / 0.00 dB
+	        balance 0.00
+	Buffer Latency: 0 usec
+	Source Latency: 0 usec
+	Resample method: PipeWire
+	Properties:
+		node.name = "input.VirtualMic"
+		target.object = "Loopback_of_Mumble"
+		stream.capture.sink = "true"
+		audio.channels = "2"
+		audio.position = "[ FL, FR ]"
+		node.passive = "true"
+		node.group = "remap-source-536870917"
+		pulse.module.id = "536870917"
+		device.description = "VirtualMic"
+		node.link-group = "loopback-894-13"
+		node.virtual = "true"
+		resample.prefill = "true"
+		resample.disable = "true"
+		media.name = "VirtualMic input"
+		stream.is-live = "true"
+		node.want-driver = "true"
+		node.autoconnect = "true"
+		media.class = "Stream/Input/Audio"
+		adapt.follower.spa-node = ""
+		object.register = "false"
+		factory.id = "6"
+		clock.quantum-limit = "8192"
+		factory.mode = "merge"
+		audio.adapt.follower = ""
+		library.name = "audioconvert/libspa-audioconvert"
+		client.id = "72"
+		object.id = "74"
+		object.serial = "93"
+		module-stream-restore.id = "source-output-by-media-name:VirtualMic input"
+
+Source Output #105
+	Driver: PipeWire
+	Owner Module: n/a
+	Client: 104
+	Source: 92
+	Sample Specification: float32le 1ch 48000Hz
+	Channel Map: mono
+	Format: pcm, format.sample_format = "\"float32le\""  format.rate = "48000"  format.channels = "1"  format.channel_map = "\"mono\""
+	Corked: no
+	Mute: no
+	Volume: mono: 65536 / 100% / 0.00 dB
+	        balance 0.00
+	Buffer Latency: 0 usec
+	Source Latency: 0 usec
+	Resample method: PipeWire
+	Properties:
+		application.name = "Mumble"
+		node.name = "Capture"
+		media.category = "Capture"
+		media.type = "Audio"
+		media.role = "phone"
+		media.name = "Capture"
+		stream.is-live = "true"
+		node.want-driver = "true"
+		node.autoconnect = "true"
+		media.class = "Stream/Input/Audio"
+		target.object = "Loopback_of_Mumble"
+		adapt.follower.spa-node = ""
+		object.register = "false"
+		factory.id = "7"
+		clock.quantum-limit = "8192"
+		factory.mode = "merge"
+		audio.adapt.follower = ""
+		library.name = "audioconvert/libspa-audioconvert"
+		client.id = "83"
+		object.id = "84"
+		object.serial = "105"
+		module-stream-restore.id = "source-output-by-media-role:phone"
