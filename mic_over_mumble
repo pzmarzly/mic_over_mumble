@@ -8,10 +8,26 @@ set -euo pipefail
 # ID = PID / process ID
 
 main () {
+    # Clean up on every exit path: Return, Ctrl+C, kill, closing the
+    # terminal, or an error.
+    trap shut_down EXIT
+    trap 'exit_on_signal 129' HUP
+    trap 'exit_on_signal 130' INT
+    trap 'exit_on_signal 143' TERM
     set_up
     echo "Press Return to shut down..."
     read -n1 -s -r
+}
+
+exit_on_signal () {
+    trap '' HUP INT TERM PIPE
+    # The signal may arrive while shut_down is already running (closing
+    # the terminal also makes `read` fail). Let it finish then.
+    if [ -n "${SHUT_DOWN_DONE:-}" ]; then
+        return
+    fi
     shut_down
+    exit "$1"
 }
 
 prepare_env () {
@@ -39,37 +55,111 @@ run_mumble_client_wizard () {
 
 set_up () {
     prepare_env
+    clean_up_previous_run
+    change_pa_config
     start_mumble_server
     start_mumble_client
-    change_pa_config
+    move_mumble_to_sink
+    # Only now: Mumble's PulseAudio backend then keeps recording from the
+    # old default source. (Its PipeWire backend follows the default
+    # source, so mute your microphone in Mumble, as the README says.)
+    set_default_source
     echo "Done. Please use pavucontrol to ensure everything works."
     print_ip
 }
 
+# Runs from the EXIT trap, so it must work no matter how far set_up got,
+# and must not stop half-way if one step fails.
 shut_down () {
+    if [ -n "${SHUT_DOWN_DONE:-}" ]; then
+        return
+    fi
+    SHUT_DOWN_DONE=1
+    # A second Ctrl+C must not interrupt the cleanup.
+    trap '' HUP INT TERM PIPE
+    set +e
     echo "Shutting down..."
     stop_murmur_client
     stop_murmur_server
     restore_pa_config
 }
 
+# A previous run that crashed or was killed may have left its devices
+# and server behind. Remove them, or the new ones would be duplicates
+# and the server database would stay locked.
+clean_up_previous_run () {
+    local module_paid
+    stop_leftover_process "Mumble client" " mumble://localhost\$"
+    stop_leftover_process "Mumble server" " -ini \./murmur\.ini\$"
+    for module_paid in $(find_leftover_modules); do
+        echo "Unloading module $module_paid left over from a previous run..."
+        pactl unload-module "$module_paid" || true
+    done
+}
+
+# Stops our user's processes whose command line matches $2 and that were
+# started by this script: they run in this directory or (older versions
+# let the server daemonize) have a file in it open.
+stop_leftover_process () {
+    local pid
+    for pid in $(pgrep -u "$(id -u)" -f -- "$2" || true); do
+        if uses_this_directory "$pid"; then
+            echo "Stopping $1 left over from a previous run (PID $pid)..."
+            stop_process "$pid"
+        fi
+    done
+}
+
+uses_this_directory () {
+    local dir fd
+    dir=$(pwd -P)
+    if [ "$(readlink "/proc/$1/cwd")" = "$dir" ]; then
+        return 0
+    fi
+    for fd in "/proc/$1/fd/"*; do
+        case "$(readlink "$fd")" in
+            "$dir"/*) return 0 ;;
+        esac
+    done
+    return 1
+}
+
+# Sends SIGTERM, waits up to 5 seconds, then sends SIGKILL.
+stop_process () {
+    local _
+    kill "$1" 2>/dev/null || return 0
+    for _ in $(seq 10); do
+        kill -0 "$1" 2>/dev/null || return 0
+        sleep 0.5
+    done
+    kill -KILL "$1" 2>/dev/null || true
+}
+
 start_mumble_client () {
     echo "Starting Mumble client (a window should appear in a moment)..."
-    mumble "mumble://localhost" >/dev/null 2>&1 &
+    # PIPEWIRE_NODE makes Mumble's PipeWire backend (Mumble >= 1.5) play
+    # into Loopback_of_Mumble from the start. Its PulseAudio backend always
+    # asks for a specific device (so PULSE_SINK doesn't work); for that one,
+    # move_mumble_to_sink moves the stream afterwards.
+    PIPEWIRE_NODE=Loopback_of_Mumble mumble "mumble://localhost" >/dev/null 2>&1 &
     MUMBLE_CLIENT_ID=$!
     # FIXME: I don't remember why I thought this
     # was necessary.
     disown
-    # Mumble is slow to launch, and the
-    # user may need to click on OK button.
-    # FIXME: probe PulseAudio server to see if
-    # Mumble has connected.
-    sleep 15
 }
 
 stop_murmur_client () {
+    if [ -z "${MUMBLE_CLIENT_ID:-}" ]; then
+        return
+    fi
     echo "Stopping Mumble client..."
-    kill -KILL "$MUMBLE_CLIENT_ID" || true
+    # If Mumble was already running, ours handed the URL over to it and
+    # exited, and the PID may belong to something else by now.
+    case "$(ps -o args= -p "$MUMBLE_CLIENT_ID")" in
+        *" mumble://localhost")
+            kill -KILL "$MUMBLE_CLIENT_ID" 2>/dev/null || true ;;
+    esac
+    MUMBLE_CLIENT_ID=
     sleep 2
 }
 
@@ -79,30 +169,50 @@ start_mumble_server () {
     if [ ! -e "$MURMURD_EXE" ]; then
         MURMURD_EXE=/usr/bin/mumble-server
     fi
-    $MURMURD_EXE -ini ./murmur.ini &
-    # Murmur forks, so the PID acquired by `$!`
-    # wouldn't help us much.
+    # -fg keeps it from forking, so `$!` is the server's PID.
+    "$MURMURD_EXE" -fg -ini ./murmur.ini >>./murmur.log 2>&1 &
+    MURMUR_SERVER_ID=$!
     sleep 5
+    if ! kill -0 "$MURMUR_SERVER_ID" 2>/dev/null; then
+        MURMUR_SERVER_ID=
+        echo "Error: Mumble server exited, see ~/.mic_over_Mumble/murmur.log" 1>&2
+        print_how_to_restart 1>&2
+        exit 1
+    fi
 }
 
 stop_murmur_server () {
+    if [ -z "${MURMUR_SERVER_ID:-}" ]; then
+        return
+    fi
     echo "Stopping Mumble server..."
-    # FIXME: find a better way to kill Murmur.
-    pkill mumble-server murmurd || true
+    stop_process "$MURMUR_SERVER_ID"
+    wait "$MURMUR_SERVER_ID" 2>/dev/null || true
+    MURMUR_SERVER_ID=
 }
 
 change_pa_config () {
     echo "Changing PulseAudio configuration..."
+    save_defaults
     add_sink
-    move_mumble_to_sink
+    # The new sink may have become the default one; other programs
+    # should keep playing where they did before.
+    restore_default "Sink" Loopback_of_Mumble "$DEFAULT_SINK"
     add_source
-    set_default_source
 }
 
 restore_pa_config () {
+    local module_paid
     echo "Restoring PulseAudio configuration..."
+    # Before unloading, so that streams move straight back.
+    restore_default "Source" VirtualMic "${DEFAULT_SOURCE:-}"
+    restore_default "Sink" Loopback_of_Mumble "${DEFAULT_SINK:-}"
     remove_source
     remove_sink
+    # E.g. if Ctrl+C hit while pactl was loading a module.
+    for module_paid in $(find_leftover_modules); do
+        pactl unload-module "$module_paid" 2>/dev/null || true
+    done
 }
 
 # PA utilities.
@@ -113,97 +223,123 @@ add_sink () {
         module-null-sink \
         sink_name=Loopback_of_Mumble \
         sink_properties=device.description=Loopback_of_Mumble)
-    sleep 1
-    SINK_PAID=$(get_sink_paid)
 }
 
 remove_sink () {
-    pactl unload-module "$SINK_MODULE_PAID"
+    if is_our_module "${SINK_MODULE_PAID:-}"; then
+        pactl unload-module "$SINK_MODULE_PAID" || true
+        SINK_MODULE_PAID=
+    fi
 }
 
+# module-remap-source rather than module-virtual-source: the latter
+# crashed PulseAudio for some users and went silent for others.
+# Idea from PR #21 by @Klok-e.
 add_source () {
     echo "Adding a virtual microphone..."
     SOURCE_MODULE_PAID=$(pactl load-module \
-        module-virtual-source \
+        module-remap-source \
         source_name=VirtualMic \
         master=Loopback_of_Mumble.monitor \
         source_properties=device.description=VirtualMic)
 }
 
 remove_source () {
-    pactl unload-module "$SOURCE_MODULE_PAID"
+    if is_our_module "${SOURCE_MODULE_PAID:-}"; then
+        pactl unload-module "$SOURCE_MODULE_PAID" || true
+        SOURCE_MODULE_PAID=
+    fi
 }
 
+# Mumble plays what the phone sends, and that must go into
+# Loopback_of_Mumble, not the speakers.
 move_mumble_to_sink () {
-    MUMBLE_CLIENT_PAID=$(get_mumble_client_paid)
-    pactl move-sink-input "$MUMBLE_CLIENT_PAID" "$SINK_PAID"
+    local mumble_streams="" sink_input_paid sink_paid loopback_paid _
+    echo "Waiting for Mumble to start playing..."
+    for _ in $(seq 30); do
+        mumble_streams=$(get_mumble_streams || true)
+        if [ -n "$mumble_streams" ]; then
+            break
+        fi
+        sleep 1
+    done
+    if [ -z "$mumble_streams" ]; then
+        echo "Warning: Mumble's audio stream did not show up. If you hear the" 1>&2
+        echo "phone on your speakers, set Mumble's output device to" 1>&2
+        echo "Loopback_of_Mumble (Mumble settings or pavucontrol)." 1>&2
+        return
+    fi
+    # Only move streams that are not there yet: the sound server
+    # remembers moves and would apply them to other programs later.
+    loopback_paid=$(get_sink_paid Loopback_of_Mumble || true)
+    while read -r sink_input_paid sink_paid; do
+        if [ "$sink_paid" != "$loopback_paid" ]; then
+            echo "Moving Mumble's stream to Loopback_of_Mumble..."
+            pactl move-sink-input "$sink_input_paid" Loopback_of_Mumble ||
+                echo "Warning: could not move Mumble's stream $sink_input_paid." 1>&2
+        fi
+    done <<< "$mumble_streams"
 }
 
 set_default_source () {
     pactl set-default-source VirtualMic
 }
 
+save_defaults () {
+    DEFAULT_SINK=$(get_pa_info_field "Default Sink")
+    DEFAULT_SOURCE=$(get_pa_info_field "Default Source")
+}
+
+# If the default $1 ("Sink" or "Source") is ours ($2), switch it back
+# to the saved one ($3). Leave it alone if the user picked another one.
+restore_default () {
+    if [ -n "$3" ] && [ "$3" != "$2" ] &&
+        [ "$(get_pa_info_field "Default $1")" = "$2" ]; then
+        pactl "set-default-${1,,}" "$3" 2>/dev/null || true
+    fi
+}
+
 # Data fetching & parsing.
+# LC_ALL=C: pactl translates its output.
 
-get_mumble_client_paid () {
-    result=$(pactl list sink-inputs |
-        grep -F -e "index: " -e "media.name = " |
-        cut_every_second_newline |
-        grep -F -e "Mumble" |
-        take_second_column)
+get_pa_info_field () {
+    LC_ALL=C pactl info | sed -n "s/^$1: //p"
+}
 
-    if [ -z "$result" ]; then
-        echo "Error: Mumble client did not connect to PulseAudio (yet?)." 1>&2
-        print_how_to_restart 1>&2
-        exit 1
-    fi
-
-    if [ "$(echo "$result" | wc -l)" != "1" ]; then
-        echo "Error: Multiple Mumble instances found." 1>&2
-        print_how_to_restart 1>&2
-        exit 1
-    fi
-
-    echo "$result"
+# Prints "<sink input ID> <sink ID>" for each Mumble playback stream.
+get_mumble_streams () {
+    LC_ALL=C pactl list sink-inputs |
+        awk '/^Sink Input #/ { paid = substr($3, 2) }
+             /^[ \t]+Sink: / { sink = $2 }
+             # 4294967295 = not connected to a sink yet
+             /^[ \t]+application\.name = "Mumble"$/ &&
+                 sink != "4294967295" { print paid, sink }'
 }
 
 get_sink_paid () {
-    result=$(pactl list sinks |
-        grep -F -e "index: " -e "name: " |
-        cut_every_second_newline |
-        grep -F -e "Loopback" |
-        cut_active_device_indicator |
-        take_second_column)
-
-     if [ -z "$result" ]; then
-        echo "Error: Failed to find the device the script should have added." 1>&2
-        print_how_to_restart 1>&2
-        exit 1
-    fi
-
-    if [ "$(echo "$result" | wc -l)" != "1" ]; then
-        echo "Error: Multiple virtual devices found." 1>&2
-        print_how_to_restart 1>&2
-        exit 1
-    fi
-
-    echo "$result"
+    LC_ALL=C pactl list short sinks | awk -v name="$1" '$2 == name { print $1 }'
 }
 
-# https://serverfault.com/a/375098/449626
-cut_every_second_newline () {
-    awk 'ORS=NR%2?" ":"\n"'
+# Modules loaded by this script, e.g. by a run that crashed or was killed.
+find_leftover_modules () {
+    # The source depends on the sink, so it is listed (and unloaded) first.
+    find_modules_with_arg source_name=VirtualMic
+    find_modules_with_arg sink_name=Loopback_of_Mumble
 }
 
-take_second_column () {
-    awk '{print $2}'
+# The ID may belong to another module by now, e.g. if the sound server
+# was restarted while the script was running.
+is_our_module () {
+    # (grep without -q reads all input, so cut never hits a closed pipe.)
+    [ -n "$1" ] && find_leftover_modules | grep -x -e "$1" >/dev/null
 }
 
-# See https://github.com/pzmarzly/mic_over_mumble/issues/5 .
-# The initial whitespace may contain an asterisk if the current
-# device is the default one.
-cut_active_device_indicator () {
-    cut -c 5-
+# On PipeWire, some modules' arguments span several lines; only lines
+# starting with "<id> module-..." are module entries.
+find_modules_with_arg () {
+    LC_ALL=C pactl list short modules |
+        grep -E -e "^[0-9]+[[:blank:]]+module-[^[:blank:]]+[[:blank:]](.*[[:blank:]])?$1([[:blank:]]|\$)" |
+        cut -f 1 || true
 }
 
 print_ip () {
